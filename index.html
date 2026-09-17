@@ -2,39 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Notification Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Looping Notification Demo</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        #status { margin-top: 15px; font-weight: bold; color: #555; }
+    </style>
 </head>
 <body>
 
-    <h2>ChromeOS Notification Tester</h2>
-    <!-- Rules require a manual user gesture (like a button click) to request permission -->
-    <button onclick="sendNotification()">Trigger System Notification</button>
+    <h2>ChromeOS Random Loop Notification Tester</h2>
+    <p>Click the button below once to authorize permissions and kick off the loop.</p>
+    
+    <button onclick="startNotificationLoop()">Start Notification Loop</button>
+    <div id="status">Status: Waiting for user to click start...</div>
 
     <script>
-    function sendNotification() {
-        // 1. Check if the browser supports the Notifications API
+    let notificationCount = 0;
+
+    function startNotificationLoop() {
+        // 1. Check browser support
         if (!("Notification" in window)) {
             alert("This browser does not support desktop notifications.");
             return;
         }
 
-        // 2. Request permission if not already granted
+        // 2. Request permission or start if already granted
         if (Notification.permission === "granted") {
-            triggerActualNotification();
+            setupNextNotification();
         } else if (Notification.permission !== "denied") {
             Notification.requestPermission().then(permission => {
                 if (permission === "granted") {
-                    triggerActualNotification();
+                    setupNextNotification();
+                } else {
+                    document.getElementById("status").innerText = "Status: Permission denied by user.";
                 }
             });
+        } else {
+            document.getElementById("status").innerText = "Status: Permission previously blocked. Please unblock in your browser settings.";
         }
     }
 
+    function setupNextNotification() {
+        // 3. Generate a random delay between 10 and 60 seconds
+        // Formula: Math.random() * (max - min) + min
+        const randomSeconds = Math.floor(Math.random() * (60 - 10 + 1)) + 10;
+        const delayInMilliseconds = randomSeconds * 1000;
+
+        document.getElementById("status").innerText = `Status: Loop Active. Next notification in ${randomSeconds} seconds...`;
+
+        // 4. Set a one-time timeout to fire the notification
+        setTimeout(() => {
+            triggerActualNotification();
+            
+            // 5. Recursively call the setup function to pick a fresh random time for the NEXT one
+            setupNextNotification();
+        }, delayInMilliseconds);
+    }
+
     function triggerActualNotification() {
-        // 3. Spawns the native ChromeOS toast system notification
+        notificationCount++;
+        
+        // 6. Spawns the native ChromeOS toast notification
         new Notification("Screenshot taken", {
-            body: "Copied to clipboard",
-            icon: "https://placeholder.com" // Optional thumbnail image
+            body: `Copied to clipboard (Notification #${notificationCount})`,
+            icon: "https://placeholder.com" 
         });
     }
     </script>
