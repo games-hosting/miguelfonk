@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Looping Notification Demo</title>
+    <title>Background Notification Demo</title>
     <style>
         body { font-family: sans-serif; padding: 20px; text-align: center; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 10px; }
@@ -12,63 +12,46 @@
 </head>
 <body>
 
-    <h2>ChromeOS Random Loop Notification Tester</h2>
-    <p>Click the button below once to authorize permissions and kick off the loop.</p>
+    <h2>ChromeOS Persistent Notification Tester</h2>
+    <p>Click below to register the background service worker.</p>
     
-    <button onclick="startNotificationLoop()">Start Notification Loop</button>
-    <div id="status">Status: Waiting for user to click start...</div>
+    <button onclick="startBackgroundLoop()">Enable Background Loop</button>
+    <div id="status">Status: Waiting for initialization...</div>
 
     <script>
-    let notificationCount = 0;
-
-    function startNotificationLoop() {
-        // 1. Check browser support
-        if (!("Notification" in window)) {
-            alert("This browser does not support desktop notifications.");
+    async function startBackgroundLoop() {
+        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+            alert("Your browser does not support background service workers or notifications.");
             return;
         }
 
-        // 2. Request permission or start if already granted
-        if (Notification.permission === "granted") {
-            setupNextNotification();
-        } else if (Notification.permission !== "denied") {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    setupNextNotification();
-                } else {
-                    document.getElementById("status").innerText = "Status: Permission denied by user.";
-                }
-            });
-        } else {
-            document.getElementById("status").innerText = "Status: Permission previously blocked. Please unblock in your browser settings.";
+        // 1. Request notification permission
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            document.getElementById("status").innerText = "Status: Permission denied.";
+            return;
         }
-    }
 
-    function setupNextNotification() {
-        // 3. Generate a random delay between 10 and 60 seconds
-        // Formula: Math.random() * (max - min) + min
-        const randomSeconds = Math.floor(Math.random() * (60 - 10 + 1)) + 10;
-        const delayInMilliseconds = randomSeconds * 1000;
-
-        document.getElementById("status").innerText = `Status: Loop Active. Next notification in ${randomSeconds} seconds...`;
-
-        // 4. Set a one-time timeout to fire the notification
-        setTimeout(() => {
-            triggerActualNotification();
+        try {
+            // 2. Register the service worker file
+            document.getElementById("status").innerText = "Registering background task...";
+            const registration = await navigator.serviceWorker.register('sw.js');
             
-            // 5. Recursively call the setup function to pick a fresh random time for the NEXT one
-            setupNextNotification();
-        }, delayInMilliseconds);
-    }
-
-    function triggerActualNotification() {
-        notificationCount++;
-        
-        // 6. Spawns the native ChromeOS toast notification
-        new Notification("Screenshot taken", {
-            body: `Copied to clipboard (Notification #${notificationCount})`,
-            icon: "https://placeholder.com" 
-        });
+            document.getElementById("status").innerText = "Status: Service Worker Active! You can close this tab now.";
+            
+            // 3. Tell the service worker to start its background loop immediately
+            if (registration.active) {
+                registration.active.postMessage({ action: 'startLoop' });
+            } else {
+                // If it's the very first install, wait until it's ready
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.active.postMessage({ action: 'startLoop' });
+                });
+            }
+        } catch (error) {
+            console.error("Service Worker registration failed:", error);
+            document.getElementById("status").innerText = "Status: Registration failed.";
+        }
     }
     </script>
 
