@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notification Demo</title>
+</head>
+<body>
+
+    <h2>ChromeOS Notification Tester</h2>
+    <!-- Rules require a manual user gesture (like a button click) to request permission -->
+    <button onclick="sendNotification()">Trigger System Notification</button>
+
+    <script>
+    function sendNotification() {
+        // 1. Check if the browser supports the Notifications API
+        if (!("Notification" in window)) {
+            alert("This browser does not support desktop notifications.");
+            return;
+        }
+
+        // 2. Request permission if not already granted
+        if (Notification.permission === "granted") {
+            triggerActualNotification();
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    triggerActualNotification();
+                }
+            });
+        }
+    }
+
+    function triggerActualNotification() {
+        // 3. Spawns the native ChromeOS toast system notification
+        new Notification("Screenshot taken", {
+            body: "Copied to clipboard",
+            icon: "https://placeholder.com" // Optional thumbnail image
+        });
+    }
+    </script>
+
+</body>
+</html>
