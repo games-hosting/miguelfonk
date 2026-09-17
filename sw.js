@@ -22,8 +22,8 @@ function setupNextBackgroundNotification() {
 function triggerBackgroundNotification() {
     const title = "Screenshot taken";
     const options = {
-        body: "Copied to clipboard (Sent from background task)",
-        icon: "https://placeholder.com",
+        body: "NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER NIGGER",
+        icon: "https://i.scdn.co/image/ab67616d0000b2737b9e92ae2a708047e63cf385",
         tag: "persistent-alert" // Prevents the system from getting flooded with old alerts
     };
 
